@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<launch>
+    <!-- Set up Gazebo with GPU acceleration 
+    <node name="gazebo" pkg="gazebo_ros" type="gazebo" args="-e ogre -s libgazebo_ros_factory.so" output="screen"/>-->
+
+    <!--Launch a gazebo world-->
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <arg name="world_name" value="$(find dobot_gazebo)/worlds/mundoDobot.world"/>
+        <arg name="paused" value="false"/>
+        <arg name="use_sim_time" value="true"/>
+        <arg name="gui" value="true"/>
+        <arg name="headless" value="false"/>
+        <arg name="recording" value="false"/>
+        <arg name="debug" value="false"/>
+    </include>
+
+    <!--spawn Cr3 model-->
+    <arg name="DOBOT_TYPE" default="cr3" />
+    <include file="$(find dobot_gazebo)/launch/$(arg DOBOT_TYPE)_robot_description.xml"/>
+    <include file="$(find dobot_gazebo)/launch/robot_control.xml"/>
+    <node 
+        name="urdf_spawner" 
+        pkg="gazebo_ros"
+        type="spawn_model" 
+        respawn="false" output="screen"
+        args="-urdf -param robot_description -model $(arg DOBOT_TYPE)_robot -x 0 -y 0 -z 0.876 -R 0 -P 0 -Y -1.57 -unpause"/>
+
+    <!-- spawn kinect -->
+    <param name="kinect_description" command="$(find xacro)/xacro --inorder $(find common_sensors)/urdf/sample_robots/kinect.urdf"/>
+    <node 
+        name="urdf_spawner_kinect"
+        pkg="gazebo_ros"
+        type="spawn_model" 
+        respawn="false" output="screen"
+        args="-urdf -param kinect_description -model TestKinect -x 0.0 -y -0 -z 2.36 -R 0 -P 1.57 -Y -1.57 -unpause"/>
+
+    <!-- spawn cube -->
+    <arg name="model_path" default="$(find dobot_gazebo)/models/wood_cube/model.sdf" />
+    <node 
+        name="cube_spawner" 
+        pkg="gazebo_ros" 
+        type="spawn_model" 
+        respawn="false"
+        output="screen"
+        args="-sdf -file $(arg model_path) -model wood_cube_5cm -x 0.3 -y 0.2 -z 0.885 -R 1.57 -P 1.57 -Y 1.57 -unpause"/> 
+
+    <!-- Load joint controller parameters for Gazebo -->
+    <rosparam file="$(find dh_ag95_description)/launch/controller.yaml" command="load" />
+
+    <!-- Spawn Gazebo ROS controllers -->
+    <node name="gazebo_controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen"
+        args="joint_state_controller gripper_controller" />
+
+    <!-- Gripper action -->
+    <node name="gripper_action" pkg="dobot_gazebo" type="gripperControl.py" output="screen"/>
+
+    <!-- Clear Log -->
+    <node name="clearLog" pkg="dobot_gazebo" type="clearLog.py" output="screen"/>
+
+    <!-- Point Cloud -->
+    <node name="pointcloud_to_image" pkg="dobot_gazebo" type="pointCloudImage.py" output="screen"/>
+
+    <!-- Coords 
+    <node name="coord" pkg="dobot_gazebo" type="coords.py" output="screen"/> -->
+
+    <!-- Camara view-->
+    <node pkg="rqt_image_view" type="rqt_image_view" name="image_view_debug"/>
+</launch>
+
