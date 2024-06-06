@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<launch>
+
+   <!-- Table View -->
+   <node name="visionMesa" pkg="dobot_real" type="visionMesa.py" output="screen"/> 
+
+   <!-- Camara view 
+   <node pkg="rqt_image_view" type="rqt_image_view" name="image_view_debug"/>-->
+
+   <!-- Localization cubes -->
+   <node name="coord" pkg="dobot_real" type="localization.py" output="screen"/> 
+
+   <!-- Localization goal -->
+   <node name="detectFinish" pkg="dobot_real" type="detectFinish.py" output="screen"/> 
+
+</launch>
